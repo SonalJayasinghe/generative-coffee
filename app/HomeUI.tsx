@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import ChatBubble from "@/components/chat-bubble";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function HomeUI() {
   const [input, setInput] = useState<string>("");
@@ -22,9 +21,28 @@ export default function HomeUI() {
     }
   }, [conversation]);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setInput("");
+    setConversation((currentConversation: ClientMessage[]) => [
+      ...currentConversation,
+      { id: nanoid(), role: "user", display: input },
+    ]);
+
+    const message = await continueConversation(input);
+
+    setConversation((currentConversation: ClientMessage[]) => [
+      ...currentConversation,
+      message,
+    ]);
+  };
+
   return (
     <>
-      <div className="flex items-center justify-center text-lg font-medium"> Sonal&apos;s Cafe</div>
+      <div className="flex items-center justify-center text-lg font-medium">
+        {" "}
+        Sonal&apos;s Cafe
+      </div>
       <div className="flex items-center justify-center p-4">
         <div className="border rounded-3xl w-full md:w-[850px]">
           <div
@@ -53,21 +71,7 @@ export default function HomeUI() {
           style={{ background: "white" }}
         >
           <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              setInput("");
-              setConversation((currentConversation: ClientMessage[]) => [
-                ...currentConversation,
-                { id: nanoid(), role: "user", display: input },
-              ]);
-
-              const message = await continueConversation(input);
-
-              setConversation((currentConversation: ClientMessage[]) => [
-                ...currentConversation,
-                message,
-              ]);
-            }}
+            onSubmit={handleSubmit}
             className=" md:w-[850px] flex overflow-hidden border rounded-3xl bg-background"
           >
             <Label htmlFor="message" className="sr-only">
@@ -80,6 +84,12 @@ export default function HomeUI() {
               value={input}
               onChange={(event) => {
                 setInput(event.target.value);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+                  event.preventDefault();
+                  handleSubmit(event);
+                }
               }}
             />
             <div className="flex items-center pt-3 p-3">
